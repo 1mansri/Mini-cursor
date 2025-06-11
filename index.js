@@ -261,6 +261,49 @@ EXAMPLE FOR FILE CREATION:
 `;
 
 async function init() {
+    console.log('🤖 AI Assistant Started');
+    console.log('Type your query and press Enter. Type "exit" to quit.\n');
+
+    const readline = await import('readline');
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    const askQuestion = (question) => {
+        return new Promise((resolve) => {
+            rl.question(question, resolve);
+        });
+    };
+
+    while (true) {
+        try {
+            const userQuery = await askQuestion('👤 You: ');
+            
+            if (userQuery.toLowerCase().trim() === 'exit') {
+                console.log('👋 Goodbye!');
+                rl.close();
+                break;
+            }
+
+            if (!userQuery.trim()) {
+                console.log('⚠️ Please enter a valid query.\n');
+                continue;
+            }
+
+            console.log(`\n🚀 Processing: ${userQuery}\n`);
+
+            await processQuery(userQuery);
+            
+            console.log('\n' + '='.repeat(50) + '\n');
+
+        } catch (error) {
+            console.log(`❌ Error: ${error.message}\n`);
+        }
+    }
+}
+
+async function processQuery(userQuery) {
     const messages = [
         {
             role: 'system',
@@ -268,11 +311,7 @@ async function init() {
         },
     ];
     
-    const userQuery = 'Create a folder "TODO App" and create HTML, CSS and JS files for a working ToDo App';
-    
     messages.push({ 'role': 'user', 'content': userQuery });
-    
-    console.log(`👤 User: ${userQuery}\n`);
     
     let stepCount = 0;
     const maxSteps = 20; // Prevent infinite loops
@@ -326,7 +365,7 @@ async function init() {
 
                 try {
                     const result = await TOOL_MAP[tool](input);
-                    console.log(`🔨 Tool ${tool}("${input}") executed successfully`);
+                    console.log(`🔨 Tool ${tool}("${input.length > 50 ? input.substring(0, 50) + '...' : input}") executed successfully`);
                     
                     messages.push({
                         'role': "assistant",
@@ -367,8 +406,6 @@ async function init() {
     if (stepCount >= maxSteps) {
         console.log(`⚠️ Maximum steps (${maxSteps}) reached. Stopping execution.`);
     }
-
-    console.log('\n✅ Process completed.');
 }
 
 // Handle process termination gracefully
